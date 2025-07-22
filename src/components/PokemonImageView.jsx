@@ -4,7 +4,7 @@ function PokemonImageView({ imageSrc, koreaName, view, setView }) {
       <img
         src={imageSrc}
         alt={koreaName}
-        className="w-52 h-52 object-contain"
+        className="w-52 h-52 object-contain transition-opacity duration-300 opacity-100"
       />
       <div className="mt-4 flex gap-4">
         <button

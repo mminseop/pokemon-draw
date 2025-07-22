@@ -10,8 +10,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // 비동기 작업을 정의하는 함수: 포켓몬 리스트를 API에서 불러오기
 export const fetchPokemonList = createAsyncThunk(
   "pokemon/fetchList",
-  async () => {
-    const pokemonIds = Array.from({ length: 151 }, (_, i) => i + 1);
+  async (pokemonCount) => {
+    const pokemonIds = Array.from({ length: pokemonCount }, (_, i) => i + 1);
 
     const responses = await Promise.all(
       pokemonIds.map(async (id) => {
@@ -28,17 +28,6 @@ export const fetchPokemonList = createAsyncThunk(
         const koreanName =
           speciesData.names.find((n) => n.language.name === "ko")?.name ??
           data.name;
-
-        const moves = await Promise.all(
-          data.moves.slice(0, 3).map(async (m) => {
-            const moveRes = await fetch(m.move.url); // 예: https://pokeapi.co/api/v2/move/1/
-            const moveData = await moveRes.json();
-            const koreanName =
-              moveData.names.find((n) => n.language.name === "ko")?.name ??
-              m.move.name;
-            return koreanName;
-          })
-        );
         
         return {
           id,
@@ -50,11 +39,11 @@ export const fetchPokemonList = createAsyncThunk(
           height: data.height,
           weight: data.weight,
           abilities: data.abilities.map((a) => a.ability.name),
-          moves,
+          moves: data.moves.slice(0, 3),
           description:
             speciesData.flavor_text_entries.find(
               (x) => x.language.name === "ko"
-            )?.flavor_text ?? "",
+            ).flavor_text ?? "",
         };
       })
     );
@@ -95,4 +84,45 @@ const pokemonSlice = createSlice({
   },
 });
 
-export default pokemonSlice.reducer;
+const getInitialFavoriteIds = () => {
+  try {
+    const stored = localStorage.getItem("favoriteIds"); // 'favoriteIds'라는 키로 저장된 값을 꺼냄
+    return stored ? JSON.parse(stored) : []; // 값이 존재하면 JSON 문자열을 배열로 파싱, 없으면 빈 배열 반환
+  } catch {
+    return []; // JSON 파싱 오류 등 예외가 발생하면 빈 배열 반환
+  }
+};
+
+// 포켓몬 찜 목록 상태를 관리 slice
+const favoriteSlice = createSlice({
+  name: "favorite",
+  initialState: {
+    ids: getInitialFavoriteIds(),  //로컬스토리지 초기값 세팅
+  },
+  reducers: {
+    // 찜 추가 액션, payload로 전달된 포켓몬 id가 없으면 배열에 추가
+    addToFavorite: (state, action) => {
+      if (!state.ids.includes(action.payload)) {
+        state.ids.push(action.payload);
+      }
+      localStorage.setItem("favoriteIds", JSON.stringify(state.ids)); // 로컬스토리지에 현재 찜 id배열저장
+    },
+    // 찜 해제 액션, payload로 전달된 포켓몬 id를 배열에서 제거
+    removeFromFavorite: (state, action) => {
+      state.ids = state.ids.filter((id) => id !== action.payload);
+      localStorage.setItem("favoriteIds", JSON.stringify(state.ids));
+    },
+  },
+});
+
+// 액션 생성자, 컴포넌트에서 dispatch용으로 사용
+export const { addToFavorite, removeFromFavorite } = favoriteSlice.actions;
+
+// 셀렉터, 상태에서 찜한 포켓몬 ID 배열을 선택할 때 사용
+export const selectFavoriteIds = (state) => state.favorite.ids;
+
+// 리듀서, store에 등록할 때 사용
+export const favoriteReducer = favoriteSlice.reducer;
+
+// 다른 slice 리듀서 export, store에 함께 등록하는 용도
+export const pokemonReducer = pokemonSlice.reducer;

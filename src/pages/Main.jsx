@@ -9,7 +9,7 @@ function Main() {
   const { list: pokemonList, loading } = useSelector((state) => state.pokemon);
 
   useEffect(() => {
-    dispatch(fetchPokemonList());
+    dispatch(fetchPokemonList(151));
   }, [dispatch]);
 
   if (loading)
@@ -23,7 +23,7 @@ function Main() {
     );
 
   return (
-    <section className="flex justify-center px-6 py-8 bg-gray-50">
+    <section className="flex justify-center px-6 py-8 bg-gray-50 mx-auto">
       <div className="flex flex-wrap gap-6 justify-start max-w-[1100px]">
         {pokemonList.map((pokemon) => (
           <PokemonCard key={pokemon.id} pokemon={pokemon} />

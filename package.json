@@ -12,11 +12,15 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@reduxjs/toolkit": "^2.8.2",
+    "korean-regexp": "^1.0.13",
+    "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.7.0",
-    "react-spinners": "^0.17.0"
+    "react-spinners": "^0.17.0",
+    "sass": "^1.89.2",
+    "styled-components": "^6.1.19"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

@@ -3,25 +3,44 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchPokemonList } from "../RTK/pokemonSlice";
 import { useEffect, useState } from "react";
 import ClipLoader from "react-spinners/ClipLoader";
-import PokemonImageView from "../components/pokemonImageView";
 import PokemonTypeWrap from "../components/PokemonTypeWrap";
 import PokemonInfoWrap from "../components/PokemonInfoWrap";
+import FlipCard from "../components/FilpCard";
+import FavoriteButton from "../components/FavoriteButton";
 
 function Detail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { list, loading, error } = useSelector((state) => state.pokemon);
-  const [view, setView] = useState("front");
 
   useEffect(() => {
     if (list.length === 0) {
-      dispatch(fetchPokemonList());
+      dispatch(fetchPokemonList(151));
     }
-  }, [dispatch, list]);
+  }, [dispatch, list.length]);
 
   const pokemon = list.find((p) => p.id === Number(id));
-  console.log(pokemon);
+  const [moveNames, setMoveNames] = useState([]);
+
+  useEffect(() => {
+    const fetchMoves = async () => {
+      if (!pokemon) return;
+
+      const results = await Promise.all(
+        pokemon.moves.slice(0, 3).map(async (m) => {
+          const res = await fetch(m.move.url);
+          const data = await res.json();
+          return (
+            data.names.find((n) => n.language.name === "ko")?.name ||
+            m.move.name
+          );
+        })
+      );
+      setMoveNames(results);
+    };
+    fetchMoves();
+  }, [pokemon]);
 
   // 조건분기
   if (loading)
@@ -36,22 +55,27 @@ function Detail() {
   if (error) return <div className="p-4 text-red-500">에러 발생: {error}</div>;
   if (!pokemon) return <div className="p-4">포켓몬을 찾을 수 없습니다.</div>;
 
-  const imageSrc = view === "front" ? pokemon.front : pokemon.back;
+  const frontImage = pokemon.front;
+  const backImage = pokemon.back;
 
   return (
     <div className="p-6 max-w-5xl mx-auto bg-white rounded-xl shadow-lg">
-      <div className="flex flex-col md:flex-row gap-10 items-center">
-        <PokemonImageView
-          imageSrc={imageSrc}
-          koreaName={pokemon.koreaName}
-          view={view}
-          setView={setView}
+      <div className="flex justify-around md:flex-row gap-10 items-center md:items-start h-[370px]">
+        <FlipCard
+          frontImage={frontImage}
+          backImage={backImage}
+          alt={pokemon.koreaName}
         />
 
-        <div className="flex-1 space-y-4 w-full">
+        <div className="relative flex-1 w-full max-w-md space-y-4">
+          <div className="absolute right-0 top-0">
+            <FavoriteButton pokemonId={pokemon.id} />
+          </div>
+
           <span className="text-xl text-gray-500">
             No. {String(pokemon.id).padStart(4, "0")}
           </span>
+
           <h2 className="text-3xl font-bold">{pokemon.koreaName}</h2>
           <p className="text-gray-600">{pokemon.description}</p>
 
@@ -59,7 +83,7 @@ function Detail() {
           <PokemonInfoWrap
             height={pokemon.height}
             weight={pokemon.weight}
-            moves={pokemon.moves}
+            moves={moveNames}
           />
 
           <div className="pt-4">

@@ -1,23 +1,26 @@
 import { Link } from "react-router-dom";
 import { typeColor } from "../utils/typeColor";
+import FavoriteButton from "./FavoriteButton";
+import "../App.scss";
+import { memo } from "react";
 
-function PokemonCard({ pokemon }) {
+const PokemonCard = memo(function PokemonCard({ pokemon }) {
+  console.log("포켓몬카드 렌더링됨:");
   return (
     <Link to={`/detail/${pokemon.id}`}>
-      <div className="w-48 bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 p-4 flex flex-col items-center">
-        <img
-          src={pokemon.front}
-          alt={pokemon.name}
-          className="w-24 h-24 object-contain mb-3"
-        />
-        <h2 className="text-lg font-semibold capitalize text-gray-800">
-          {pokemon.koreaName}
-        </h2>
-        <div className="flex gap-2 mt-2 flex-wrap justify-center">
+      <div className="relative pokemon-card p-4 flex flex-col items-center">
+        <div className="absolute top-2 right-2">
+          <FavoriteButton pokemonId={pokemon.id} />
+        </div>
+        <img src={pokemon.front} alt={pokemon.name} className="pokemon-image" />
+        <h2 className="pokemon-name capitalize">{pokemon.koreaName}</h2>
+        <div className="pokemon-types">
           {pokemon.types.map((type) => (
             <span
               key={type}
-              className={`px-2 py-1 text-xs rounded-full text-white capitalize ${typeColor(type)}`}
+              className={`px-2 py-1 text-xs rounded-full text-white capitalize ${typeColor(
+                type
+              )}`}
             >
               {type}
             </span>
@@ -26,6 +29,6 @@ function PokemonCard({ pokemon }) {
       </div>
     </Link>
   );
-}
+});
 
 export default PokemonCard;
